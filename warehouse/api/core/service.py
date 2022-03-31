@@ -8,6 +8,7 @@ class Service:
     @staticmethod
     def process(data):
         serializer = OutputSerializer()
+        serializer.data["result"] = []
         result_serializer = serializer.ResultSerializer()
         product_material_serializer = result_serializer.ProductMaterialSerializer()
 
@@ -15,7 +16,7 @@ class Service:
             product = Product.objects.get(id=element["product"].id)
             result_serializer.data["product_name"] = product.name
             result_serializer.data["product_qty"] = element["quanity"]
-
+            result_serializer.data["product_materials"] = []
             for product_material in product.product_materials:
                 material = product_material.material
                 required_quantiy = product_material.quanity * element["quanity"]
@@ -29,7 +30,6 @@ class Service:
                         product_material_serializer.data["price"] = warehouse.price
                     else:
                         product_material_serializer.data["qty"] = None
-                result_serializer.data["product_materials"] = product_material_serializer.data
-            serializer.data["result"] = result_serializer.data
-
+                result_serializer.data["product_materials"].append(product_material_serializer.data)
+            serializer.data["result"].append(result_serializer.data)
         return serializer.data
