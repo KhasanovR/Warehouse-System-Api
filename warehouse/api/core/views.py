@@ -14,7 +14,7 @@ class ResultViewSet(viewsets.ViewSet):
 
     @action(methods=['post'], detail=True, serializer_class=InputSerializer, filter_backends=[])
     def process(self, request, *args, **kwargs):
-        serializer = InputSerializer(data=request.data)
+        serializer = InputSerializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         data = Service.process(data)

@@ -7,29 +7,26 @@ from warehouse.api.core.serializers import (
 class Service:
     @staticmethod
     def process(data):
-        serializer = OutputSerializer()
-        serializer.data["result"] = []
-        result_serializer = serializer.ResultSerializer()
-        product_material_serializer = result_serializer.ProductMaterialSerializer()
+        result = {'result': []}
 
         for element in data:
             product = Product.objects.get(id=element["product"].id)
-            result_serializer.data["product_name"] = product.name
-            result_serializer.data["product_qty"] = element["quanity"]
-            result_serializer.data["product_materials"] = []
+            outter_temp = {"product_name": product.name, "product_qty": element["quanity"], "product_materials": []}
             for product_material in product.product_materials:
                 material = product_material.material
                 required_quantiy = product_material.quanity * element["quanity"]
                 for warehouse in material.warehouses:
-                    product_material_serializer.data["material_name"] = material.name
-                    product_material_serializer.data["qty"] = warehouse.reminder
+                    inner_temp = {"material_name": material.name, "qty": warehouse.reminder}
 
                     if required_quantiy > warehouse.reminder:
                         required_quantiy -= warehouse.reminder
-                        product_material_serializer.data["warehouse_id"] = warehouse.id
-                        product_material_serializer.data["price"] = warehouse.price
+                        inner_temp["warehouse_id"] = warehouse.id
+                        inner_temp["price"] = warehouse.price
                     else:
-                        product_material_serializer.data["qty"] = None
-                result_serializer.data["product_materials"].append(product_material_serializer.data)
-            serializer.data["result"].append(result_serializer.data)
-        return serializer.data
+                        inner_temp["warehouse_id"] = None
+                        inner_temp["price"] = None
+                outter_temp["product_materials"].append(inner_temp)
+            result["result"].append(outter_temp)
+        serializer = OutputSerializer(data=result, many=True)
+        serializer.is_valid()
+        return serializer.validated_data

@@ -67,23 +67,18 @@ class Meta:
 
 
 class InputSerializer(serializers.Serializer, ABC):
-    class requestSerializer(serializers.Serializer, ABC):
-        product = ProductSerializer()
-        quanity = serializers.IntegerField()
-
-    request = requestSerializer(many=True)
+    product = ProductSerializer()
+    quanity = serializers.IntegerField()
 
 
 class OutputSerializer(serializers.Serializer, ABC):
-    class ResultSerializer(serializers.Serializer, ABC):
-        class ProductMaterialSerializer(serializers.Serializer, ABC):
-            warehouse_id = serializers.IntegerField()
-            material_name = serializers.CharField(max_length=255)
-            qty = serializers.IntegerField()
-            price = serializers.DecimalField(decimal_places=2, max_digits=12)
+    class ProductMaterialSerializer(serializers.Serializer, ABC):
+        warehouse_id = serializers.IntegerField()
+        material_name = serializers.CharField(max_length=255)
+        qty = serializers.IntegerField()
+        price = serializers.DecimalField(decimal_places=2, max_digits=12)
 
-        product_name = serializers.CharField(max_length=255)
-        product_qty = serializers.IntegerField()
-        product_materials = ProductMaterialSerializer(many=True)
+    product_name = serializers.CharField(max_length=255)
+    product_qty = serializers.IntegerField()
+    product_materials = ProductMaterialSerializer(many=True)
 
-    result = ResultSerializer(many=True)
