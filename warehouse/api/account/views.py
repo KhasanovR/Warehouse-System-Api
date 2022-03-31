@@ -1,0 +1,134 @@
+import reversion
+from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView as DefaultTokenObtainPairView,
+    TokenRefreshView as DefaultTokenRefreshView
+)
+
+from warehouse.account.models import User
+from warehouse.api.account.schemas import TokenObtainPairSchema, TokenRefreshSchema
+from warehouse.api.account.serializers import (
+    TokenObtainPairRequestSerializer,
+    TokenObtainPairResponseSerializer,
+    TokenRefreshRequestSerializer,
+    TokenRefreshResponseSerializer,
+    UserSerializer,
+    ChangePasswordSerializer,
+    AddToGroupSerializer, UserActivationSerializer,
+)
+from warehouse.api.core.schemas import AutoSchema
+from warehouse.api.core.views import BaseViewSet
+
+
+class TokenObtainPairView(DefaultTokenObtainPairView):
+    serializer_class = TokenObtainPairRequestSerializer
+    schema = TokenObtainPairSchema()
+
+    def post(self, request, *args, **kwargs):
+        request_serializer = self.get_serializer(data=request.data)
+
+        try:
+            request_serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        response_serializer = TokenObtainPairResponseSerializer(request_serializer.validated_data)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+
+class TokenRefreshView(DefaultTokenRefreshView):
+    serializer_class = TokenRefreshRequestSerializer
+    schema = TokenRefreshSchema()
+
+    def post(self, request, *args, **kwargs):
+        request_serializer = self.get_serializer(data=request.data)
+
+        try:
+            request_serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        response_serializer = TokenRefreshResponseSerializer(request_serializer.validated_data)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+
+class UserViewSet(BaseViewSet, viewsets.ModelViewSet):
+    schema = AutoSchema(tags=['Users'])
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def create(self, request, *args, **kwargs):
+        with reversion.create_revision():
+            response = super(UserViewSet, self).create(request, *args, **kwargs)
+            reversion.set_user(request.user)
+            reversion.set_date_created(timezone.now())
+            reversion.set_comment("Created User")
+            return response
+
+    def update(self, request, *args, **kwargs):
+        with reversion.create_revision():
+            response = super(UserViewSet, self).update(request, *args, **kwargs)
+            reversion.set_user(request.user)
+            reversion.set_date_created(timezone.now())
+            reversion.set_comment("Updated User")
+            return response
+
+    def partial_update(self, request, *args, **kwargs):
+        with reversion.create_revision():
+            response = super(UserViewSet, self).partial_update(request, *args, **kwargs)
+            reversion.set_user(request.user)
+            reversion.set_date_created(timezone.now())
+            reversion.set_comment("Updated Partially User")
+            return response
+
+    def destroy(self, request, *args, **kwargs):
+        with reversion.create_revision():
+            response = super(UserViewSet, self).destroy(request, *args, **kwargs)
+            reversion.set_user(request.user)
+            reversion.set_date_created(timezone.now())
+            reversion.set_comment("Destroyed User")
+            return response
+
+    @action(methods=['post', 'delete'], detail=True, serializer_class=UserActivationSerializer)
+    def activation(self, request, *args, **kwargs):
+        with reversion.create_revision():
+            instance = self.get_object()
+            instance.activate(method=request.method)
+            # TODO: check response docs
+            reversion.set_user(request.user)
+            reversion.set_date_created(timezone.now())
+            comment = 'Activated User'
+            if not instance.is_active:
+                comment = 'Deactivated User'
+            reversion.set_comment(comment)
+        return Response(status=status.HTTP_200_OK)
+
+    @action(methods=['post', 'delete'], detail=True, serializer_class=AddToGroupSerializer)
+    def add_to_group(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = AddToGroupSerializer(instance=instance, data=request.data, context={'request': self.request})
+        serializer.is_valid(raise_exception=True)
+        with reversion.create_revision():
+            serializer.save()
+            reversion.set_user(request.user)
+            reversion.set_date_created(timezone.now())
+            reversion.set_comment("Added User to Group")
+        # TODO: check response docs
+        return Response(status=status.HTTP_200_OK)
+
+    @action(methods=['post'], detail=True, serializer_class=ChangePasswordSerializer)
+    def passport_change(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = ChangePasswordSerializer(instance=instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        with reversion.create_revision():
+            serializer.save()
+            reversion.set_user(request.user)
+            reversion.set_date_created(timezone.now())
+            reversion.set_comment("Changed Password")
+        # TODO: check response docs
+        return Response(status=status.HTTP_200_OK)

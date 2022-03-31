@@ -1,0 +1,41 @@
+version: "3"
+
+services:
+  db:
+    environment:
+      - POSTGRES_USER=warehouse
+      - POSTGRES_DB=warehouse
+      - POSTGRES_PASSWORD=warehouse
+    volumes:
+      - warehouse_db:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  redis:
+    ports:
+      - 6379:6379
+    volumes:
+      - warehouse_redis:/data
+
+  app:
+    volumes:
+      - .:/app
+      - ./media:/app/media
+      - ./static:/app/static
+    command: ./manage.py runserver 0.0.0.0:8000
+
+  celery-worker:
+    volumes:
+      - .:/app
+      - ./media:/app/media
+      - ./static:/app/static
+
+  celery-beat:
+    volumes:
+      - .:/app
+      - ./media:/app/media
+      - ./static:/app/static
+
+volumes:
+  warehouse_db:
+  warehouse_redis:

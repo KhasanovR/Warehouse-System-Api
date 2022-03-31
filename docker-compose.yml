@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:12.3
+    hostname: db
+    env_file:
+      - .env
+
+  redis:
+    image: library/redis:5.0-alpine
+
+  app:
+    build:
+      context: .
+      dockerfile: ./docker/app/Dockerfile
+    image: ${DOCKER_REPOSITORY}/app:${DOCKER_APP_VERSION}
+    hostname: app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+
+  celery-worker:
+    image: ${DOCKER_REPOSITORY}/app:${DOCKER_APP_VERSION}
+    env_file:
+      - .env
+    command: /bin/bash -c "celery -A warehouse worker --app=warehouse.celeryconf:app --loglevel ${CELERY_WORKER_LOGLEVEL} -P threads"
+    depends_on:
+      - app
+
+  celery-beat:
+    image: ${DOCKER_REPOSITORY}/app:${DOCKER_APP_VERSION}
+    env_file:
+      - .env
+    command: /bin/bash -c "celery -A warehouse beat --app=warehouse.celeryconf:app --pidfile= --loglevel ${CELERY_BEAT_LOGLEVEL}"
+    depends_on:
+      - app
