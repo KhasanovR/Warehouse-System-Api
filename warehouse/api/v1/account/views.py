@@ -10,24 +10,15 @@ from rest_framework_simplejwt.views import (
 )
 
 from warehouse.account.models import User
-from warehouse.api.account.schemas import TokenObtainPairSchema, TokenRefreshSchema
-from warehouse.api.account.serializers import (
-    TokenObtainPairRequestSerializer,
+from warehouse.api.v1.account.serializers import (
     TokenObtainPairResponseSerializer,
-    TokenRefreshRequestSerializer,
     TokenRefreshResponseSerializer,
-    UserSerializer,
     ChangePasswordSerializer,
-    AddToGroupSerializer, UserActivationSerializer,
+    AddToGroupSerializer, UserActivationSerializer, UserSerializer,
 )
-from warehouse.api.core.schemas import AutoSchema
-from warehouse.api.core.views import BaseViewSet
 
 
 class TokenObtainPairView(DefaultTokenObtainPairView):
-    serializer_class = TokenObtainPairRequestSerializer
-    schema = TokenObtainPairSchema()
-
     def post(self, request, *args, **kwargs):
         request_serializer = self.get_serializer(data=request.data)
 
@@ -41,9 +32,6 @@ class TokenObtainPairView(DefaultTokenObtainPairView):
 
 
 class TokenRefreshView(DefaultTokenRefreshView):
-    serializer_class = TokenRefreshRequestSerializer
-    schema = TokenRefreshSchema()
-
     def post(self, request, *args, **kwargs):
         request_serializer = self.get_serializer(data=request.data)
 
@@ -56,8 +44,7 @@ class TokenRefreshView(DefaultTokenRefreshView):
         return Response(response_serializer.data, status=status.HTTP_200_OK)
 
 
-class UserViewSet(BaseViewSet, viewsets.ModelViewSet):
-    schema = AutoSchema(tags=['Users'])
+class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 

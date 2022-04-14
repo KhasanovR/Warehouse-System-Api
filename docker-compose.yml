@@ -10,6 +10,17 @@ services:
   redis:
     image: library/redis:5.0-alpine
 
+  nginx:
+    build:
+      context: ./docker/nginx
+    image: ${DOCKER_REPOSITORY}/nginx:${DOCKER_NGINX_VERSION}
+    command: /run_nginx.sh
+    env_file:
+      - .env
+    ports:
+      - 80:80
+      - 443:443
+
   app:
     build:
       context: .
@@ -26,7 +37,7 @@ services:
     image: ${DOCKER_REPOSITORY}/app:${DOCKER_APP_VERSION}
     env_file:
       - .env
-    command: /bin/bash -c "celery -A warehouse worker --app=warehouse.celeryconf:app --loglevel ${CELERY_WORKER_LOGLEVEL} -P threads"
+    command: /bin/bash -c "celery -A warehouse worker --loglevel ${CELERY_WORKER_LOGLEVEL} -P threads"
     depends_on:
       - app
 
@@ -34,6 +45,7 @@ services:
     image: ${DOCKER_REPOSITORY}/app:${DOCKER_APP_VERSION}
     env_file:
       - .env
-    command: /bin/bash -c "celery -A warehouse beat --app=warehouse.celeryconf:app --pidfile= --loglevel ${CELERY_BEAT_LOGLEVEL}"
+    command: /bin/bash -c "celery -A warehouse beat --pidfile= --loglevel ${CELERY_BEAT_LOGLEVEL}"
     depends_on:
       - app
+

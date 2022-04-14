@@ -1,18 +1,18 @@
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from warehouse.api.core.schemas import AutoSchema
-from warehouse.api.core.serializers import (
+from warehouse.api.v1.core.serializers import (
     InputSerializer,
+    OutputSerializer,
 )
-from warehouse.api.core.service import Service
+from warehouse.api.v1.core.service import Service
 
 
 class ResultViewSet(viewsets.ViewSet):
-    schema = AutoSchema(tags=['Results'])
-
-    @action(methods=['post'], detail=True, serializer_class=InputSerializer, filter_backends=[])
+    @swagger_auto_schema(request_body=InputSerializer, responses={200: OutputSerializer(many=True)})
+    @action(methods=['post'], detail=True)
     def process(self, request, *args, **kwargs):
         serializer = InputSerializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)

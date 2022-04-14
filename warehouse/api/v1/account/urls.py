@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import SimpleRouter
 
-from warehouse.api.account.views import TokenObtainPairView, TokenRefreshView, UserViewSet
+from warehouse.api.v1.account.views import TokenObtainPairView, TokenRefreshView, UserViewSet
 
 router = SimpleRouter()
 router.register(r'users', UserViewSet, basename="users")

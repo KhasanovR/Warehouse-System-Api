@@ -9,7 +9,7 @@ services:
     volumes:
       - warehouse_db:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - "5432:5432"
 
   redis:
     ports:
@@ -17,12 +17,19 @@ services:
     volumes:
       - warehouse_redis:/data
 
+  nginx:
+    volumes:
+      - ./docker/nginx/letsencrypt/fullchain.pem:/etc/letsencrypt/live/${PRODUCTION_HOST}/fullchain.pem
+      - ./docker/nginx/letsencrypt/privkey.pem:/etc/letsencrypt/live/${PRODUCTION_HOST}/privkey.pem
+      - ./media:/app/media:ro
+      - ./static:/app/static:ro
+
   app:
     volumes:
       - .:/app
       - ./media:/app/media
       - ./static:/app/static
-    command: ./manage.py runserver 0.0.0.0:8000
+    command: python ./manage.py runserver 0.0.0.0:8000
 
   celery-worker:
     volumes:

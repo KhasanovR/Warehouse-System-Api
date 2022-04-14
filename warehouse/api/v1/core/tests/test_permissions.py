@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.test import APIRequestFactory
 
-from warehouse.api.core.permissions import DjangoModelPermissions
+from warehouse.api.v1.core import DjangoModelPermissions
 
 User = get_user_model()
 factory = APIRequestFactory()

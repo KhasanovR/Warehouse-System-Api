@@ -1,5 +1,3 @@
-from abc import ABC
-
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -66,13 +64,13 @@ class Meta:
     ]
 
 
-class InputSerializer(serializers.Serializer, ABC):
+class InputSerializer(serializers.Serializer):
     product = ProductSerializer()
     quanity = serializers.IntegerField()
 
 
-class OutputSerializer(serializers.Serializer, ABC):
-    class ProductMaterialSerializer(serializers.Serializer, ABC):
+class OutputSerializer(serializers.Serializer):
+    class ProductMaterialSerializer(serializers.Serializer):
         warehouse_id = serializers.IntegerField()
         material_name = serializers.CharField(max_length=255)
         qty = serializers.IntegerField()

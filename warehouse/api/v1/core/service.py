@@ -1,5 +1,5 @@
 from warehouse.core.models import Product
-from warehouse.api.core.serializers import (
+from warehouse.api.v1.core.serializers import (
     OutputSerializer,
 )
 
